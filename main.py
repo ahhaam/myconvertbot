@@ -1,23 +1,25 @@
 # main.py
-from flask import Flask, request  # برای Webhook
+from flask import Flask, request
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Bot
 import requests
 from bs4 import BeautifulSoup
 import os
 import subprocess
+import telegram
 
 app = Flask(__name__)
 
-# توکن ربات
-TOKEN = os.environ.get("TOKEN")  # توکن جدیدت رو بذار
+# گرفتن توکن از متغیر محیطی
+TOKEN = os.environ.get("TOKEN")
+if not TOKEN:
+    raise ValueError("توکن ربات توی متغیرهای محیطی پیدا نشد! لطفاً TOKEN رو توی Railway تنظیم کن.")
 bot = Bot(TOKEN)
 
 # متغیرها برای ذخیره ویدیوها
 video_links = []
 selected_videos = {}
 
-# تنظیم Webhook
 @app.route('/')
 def hello():
     return "ربات فعاله!"
@@ -101,7 +103,7 @@ def download_and_convert(query, context, video_url, chat_id):
             f.write(response.content)
         
         file_size_mb = os.path.getsize(input_file) / (1024 * 1024)
-        if file_size_mb > 50:  # محدودیت پیش‌فرض
+        if file_size_mb > 50:
             query.message.reply_text(f"ویدیو با حجم {file_size_mb:.2f} مگابایت بزرگ‌تر از 50 مگابایته!")
             os.remove(input_file)
             return
@@ -131,8 +133,10 @@ dp.add_handler(CommandHandler("start", start))
 dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_url))
 dp.add_handler(CallbackQueryHandler(button_handler))
 
-if __name__ == '__main__':
-    # تنظیم Webhook موقع دیپلوی (Railway خودش پورت می‌ده)
+if __name__ == "__main__":
+    # گرفتن پورت از متغیر محیطی Railway
     PORT = int(os.environ.get("PORT", 5000))
-    bot.setWebhook(f"https://your-railway-app.railway.app/{TOKEN}")
+    # تنظیم Webhook با دامنه Railway
+    RAILWAY_URL = os.environ.get("RAILWAY_URL", f"https://your-railway-app.railway.app")
+    bot.setWebhook(f"{RAILWAY_URL}/{TOKEN}")
     app.run(host="0.0.0.0", port=PORT)
