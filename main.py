@@ -10,7 +10,7 @@ import subprocess
 app = Flask(__name__)
 
 # توکن ربات
-TOKEN = "8150400391:AAGiwzVJ65WLOLBjTFJgvA6cN96e1nSbOLU"  # توکن جدیدت رو بذار
+TOKEN = os.environ.get("TOKEN")  # توکن جدیدت رو بذار
 bot = Bot(TOKEN)
 
 # متغیرها برای ذخیره ویدیوها
